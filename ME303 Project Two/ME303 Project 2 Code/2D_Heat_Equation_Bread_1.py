@@ -4,7 +4,6 @@ import random
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D  
 from matplotlib.ticker import LinearLocator
-from tqdm.notebook import tqdm
 
 
 class Bread:
@@ -48,43 +47,37 @@ class Bread:
         
         x_ = np.linspace(0, self.X, round(self.X/dx)+1)
         y_ = np.linspace(0, self.Y, round(self.Y/dy)+1)
-        X_, Y_ = np.meshgrid(x_ , y_);
+        X_, Y_ = np.meshgrid(x_ , y_)
         
         # Multiply
-        T_cur = np.sin(4*np.pi*X_) * np.cos(4*np.pi*Y_)
+        T_cur = np.sin(np.pi*X_) * np.sin(4*np.pi*Y_)
         
-        # Dirichlet Boundary Conditions
-        BC1 = 1   # T(x,y=0,t)
-        BC2 = -1  # T(x,y=1,t)
+        #Boundary Conditions
+        BC1 = 0                    # T(x=0,y,t)
+        BC2 = 0                    # T(x=1,y,t)
+        BC3 = np.sin(np.pi*x_)      # T(x,y=0,t)
+        BC4 = np.cos(2*np.pi*x_)-1  # T(x,y=1,t)
         
         # Index as T[y][x] 
-        T_cur[0][:] = BC1
-        T_cur[-1][:] = BC2
+        T_cur[:][0] = BC1 
+        T_cur[:][-1] = BC2
+        T_cur[0][:] = BC3
+        T_cur[-1][:] = BC4
         
         T_old = T_cur.copy()
             
         for t in tqdm(range(round(cool_time/dt)+1)):
 
             for y in range(1,len(y_)-1):
-                
+
                 for x in range(1,len(x_)-1):
 
                     # Explicit Time Advancement
                     a =  ( T_old[y][x+1] - 2*T_old[y][x] + T_old[y][x-1] ) / (dx*dx)
                     b =  ( T_old[y+1][x] - 2*T_old[y][x] + T_old[y-1][x] ) / (dy*dy)
 
-                    T_cur[y][x] = (dt*(a+b)) + T_old[y][x]
-                    
-                    # Neuman Boundary Conditions
-                    
-                    # x = 0 -> T[y][x+1] = T[y][x-1]
-                    c =  ( 2*T_old[y][1] - 2*T_old[y][0]) / (dx*dx)
-                    T_cur[y][0] = (dt*(c+b)) + T_old[y][0]
-                    
-                    # x = 1 -> T[y][x+1] = 4*dx + T[y][x-1]
-                    d = ( 2*T_old[y][-2] - 2*T_old[y][-1] + 4*dx ) / (dx*dx)
-                    T_cur[y][-1] = (dt*(d+b)) + T_old[y][-1]
-                
+                    T_cur[y][x] = (dt*(a+b)) + T_old[y][x];
+
             T_old = T_cur
 
             # Save Plot 
@@ -93,12 +86,12 @@ class Bread:
                 print("Saving Plot Image at Checkpoint: {} s".format(t* dt))
                 self.save_plot(X_, Y_, T_cur, t)
 
-        print("Time Elapsed: {} s".format(self.cool_time))       
+        printf("Time Elapsed: {} s".format(self.cool_time))       
     
     def save_plot(self, X_, Y_, T_cur, t):
         
         fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
-        surf = ax.plot_surface(X_, Y_, T_cur, cmap=cm.autumn,
+        surf = ax.plot_surface(X_, Y_, T_cur, cmap=cm.hot,
                                linewidth=0, antialiased=False)
 
         fig.colorbar(surf, shrink=0.5, aspect=5)
@@ -107,7 +100,7 @@ class Bread:
         ax.set_zticklabels([])
         ax.view_init(azim=270, elev=90)         
         ax.set_title(" Heat Distribution of {} during T = {:.4f}s".format(self.name, t*self.dt))
-        file_name = 'imgs/bread_2/{}_{}_heat_plot.jpg'.format(self.name.replace(" ", "_"), str(t))
+        file_name = 'imgs/bread_1/{}_{}_heat_plot.jpg'.format(self.name.replace(" ", "_"), str(t))
         plt.savefig(file_name, dpi=200)
         
         

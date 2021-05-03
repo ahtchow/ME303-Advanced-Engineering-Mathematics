@@ -4,7 +4,6 @@ import random
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D  
 from matplotlib.ticker import LinearLocator
-from tqdm.notebook import tqdm
 
 
 class Bread:
